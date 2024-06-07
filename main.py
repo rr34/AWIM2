@@ -24,7 +24,7 @@ class AppWindow(Tk):
         #---------------------------------------- Generate Frames ---------------------------------
         self.frames = {}
 
-        for F in (XMPdisplay):
+        for F in (XMPdisplay, lensVisualization):
             page_name = F.__name__
             frame = F(parent=self.container, controller=self)
             frame.pack(side='top', fill='both', expand=True)
@@ -63,9 +63,15 @@ class XMPdisplay(Frame):
         self.controller.XMPdirectory = filedialog.askdirectory(title='Select XMP directory.')
 
     def readXMPfiles(self, event):
-        XMPtext.readXMP(self.controller.XMPdirectory)
+        XMPtext.readXMPfiles(self.controller.XMPdirectory)
 
         # this frame will display the selected fields from XMP files and allow to modify by defining keyframes etc
+
+class lensVisualization(Frame):
+    def __init__(self, parent, controller):
+        Frame.__init__(self, parent)
+        self.controller = controller
+
 
 
 #------------------------------------------- Procedural --------------------------------------
