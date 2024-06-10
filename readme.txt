@@ -1,7 +1,9 @@
 Add lightroom XMP scripting: 3 parts are all completed by user in a single frame
 1. read the XMPs to a spreadsheet / dataframe
 2. modify the dataframe
-3. write the changes (changes only) to the XMPs
+    - sort dataframe by capture moment
+    - add and delete tags, use tags for everything from keyframes to day/night to every fourth/tenth/20th photo feature
+3. write the changes (changes only?) to the XMPs
  
 Lightroom time lapse functions:
 1.

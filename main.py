@@ -2,7 +2,9 @@ from tkinter import Tk, filedialog # messagebox, Entry, filedialog, Menu, String
 from tkinter.ttk import *
 from tkinter import scrolledtext, END, font as tkfont
 from time import perf_counter
-import XMPtext
+import os, pathlib
+import datetime
+import XMPtext, DataFormatters
 
 class AppWindow(Tk):
     def __init__(self):
@@ -20,6 +22,7 @@ class AppWindow(Tk):
         self.container.grid_columnconfigure(0, weight=1)
 
         #---------------------------------------- Controller Variables ----------------------------
+        # self.working_directory = os.path.join(pathlib.Path(__file__).parent.resolve(), r'/working')
 
         #---------------------------------------- Generate Frames ---------------------------------
         self.frames = {}
@@ -63,7 +66,12 @@ class XMPdisplay(Frame):
         self.controller.XMPdirectory = filedialog.askdirectory(title='Select XMP directory.')
 
     def readXMPfiles(self, event):
-        XMPtext.readXMPfiles(self.controller.XMPdirectory)
+        self.controller.XMP_snapshot = XMPtext.readXMPfiles(self.controller.XMPdirectory)
+        timenow = datetime.datetime.now()
+        time_string = DataFormatters.format_datetime(timenow, 'to string for filename')
+        filename = 'XMP_snapshot %s.csv' % (time_string)
+        filepath = os.path.join(self.controller.XMPdirectory, filename)
+        self.controller.XMP_snapshot.to_csv(filepath)
 
         # this frame will display the selected fields from XMP files and allow to modify by defining keyframes etc
 
