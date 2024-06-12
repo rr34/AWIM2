@@ -1,10 +1,12 @@
 from tkinter import Tk, filedialog # messagebox, Entry, filedialog, Menu, StringVar, Frame, Label, scrolledtext, WORD, END, font as tkfont, Listbox
 from tkinter.ttk import *
 from tkinter import scrolledtext, END, font as tkfont
+import pandas as pd
 from time import perf_counter
 import os, pathlib
 import datetime
 import XMPtext, DataFormatters
+import pandastable
 
 class AppWindow(Tk):
     def __init__(self):
@@ -62,6 +64,9 @@ class XMPdisplay(Frame):
         self.bind('<Control-Key-f>', self.select_XMPdirectory)
         self.bind('<Control-Key-r>', self.readXMPfiles)
 
+        self.first_row = 0
+        self.columns_to_display = ['exif DateTimeOriginal', 'crs Temperature', 'crs Tint', 'crs Exposure2012'] # need to add comma-separated tags
+
     def select_XMPdirectory(self, event):
         self.controller.XMPdirectory = filedialog.askdirectory(title='Select XMP directory.')
 
@@ -72,6 +77,15 @@ class XMPdisplay(Frame):
         filename = 'XMP_snapshot %s.csv' % (time_string)
         filepath = os.path.join(self.controller.XMPdirectory, filename)
         self.controller.XMP_snapshot.to_csv(filepath)
+        
+        self.display_dataframe()
+
+
+    def display_dataframe(self):
+        self.display_dataframe = self.controller.XMP_snapshot[self.columns_to_display]
+        self.table = pt = pandastable.Table(self, dataframe=self.display_dataframe, showtoolbar=True, showstatusbar=True)
+
+        pt.show()
 
         # this frame will display the selected fields from XMP files and allow to modify by defining keyframes etc
 
