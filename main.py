@@ -65,13 +65,14 @@ class XMPdisplay(Frame):
         self.bind('<Control-Key-r>', self.readXMPfiles)
 
         self.first_row = 0
-        self.columns_to_display = ['exif DateTimeOriginal', 'crs Temperature', 'crs Tint', 'crs Exposure2012'] # need to add comma-separated tags
+        self.columns_to_display = ['exif DateTimeOriginal', 'crs Temperature', 'crs Tint', 'crs Exposure2012', 'exif FNumber', 'awim CommaSeparatedTags'] # need to add comma-separated tags
 
     def select_XMPdirectory(self, event):
         self.controller.XMPdirectory = filedialog.askdirectory(title='Select XMP directory.')
 
     def readXMPfiles(self, event):
-        self.controller.XMP_snapshot = XMPtext.readXMPfiles(self.controller.XMPdirectory)
+        self.controller.XMP_snapshot, self.controller.lapse_latlng = XMPtext.readXMPfiles(self.controller.XMPdirectory)
+        print(self.controller.lapse_latlng)
         timenow = datetime.datetime.now()
         time_string = DataFormatters.format_datetime(timenow, 'to string for filename')
         filename = 'XMP_snapshot %s.csv' % (time_string)

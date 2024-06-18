@@ -57,5 +57,26 @@ def readXMPfiles(XMPdirectory):
 
             xmp_snapshot.loc[key,column] = single_value
 
+    xmp_snapshot = xmp_snapshot.sort_values('exif DateTimeOriginal')
+    xmp_snapshot.insert(0, 'awim FrameNumber', range(1, 1 + len(xmp_snapshot)))
+
+    latitude_txt_split = xmp_snapshot.iloc[0]['exif GPSLatitude'].split(',')
+    latitude_hemisphere = latitude_txt_split[1][-1]
+    if latitude_hemisphere == 'N':
+        latitude_hemisphere_value = 1
+    elif latitude_hemisphere == 'S':
+        latitude_hemisphere_value = -1
+    latitude_txt_split[1] = latitude_txt_split[1][:-1]
+    latitude_value = latitude_hemisphere_value * (float(latitude_txt_split[0]) + float(latitude_txt_split[1])/60)
+    longitude_txt_split = xmp_snapshot.iloc[0]['exif GPSLongitude'].split(',')
+    longitude_hemisphere = longitude_txt_split[1][-1]
+    if longitude_hemisphere == 'E':
+        longitude_hemisphere_value = 1
+    elif longitude_hemisphere == 'W':
+        longitude_hemisphere_value = -1
+    longitude_txt_split[1] = longitude_txt_split[1][:-1]
+    longitude_value =  longitude_hemisphere_value * (float(longitude_txt_split[0]) + float(longitude_txt_split[1])/60)
+
+    latlng = [latitude_value, longitude_value]
     
-    return xmp_snapshot
+    return xmp_snapshot, latlng
