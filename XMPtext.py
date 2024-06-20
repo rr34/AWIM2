@@ -62,21 +62,17 @@ def readXMPfiles(XMPdirectory):
 
     latitude_txt_split = xmp_snapshot.iloc[0]['exif GPSLatitude'].split(',')
     latitude_hemisphere = latitude_txt_split[1][-1]
-    if latitude_hemisphere == 'N':
-        latitude_hemisphere_value = 1
-    elif latitude_hemisphere == 'S':
-        latitude_hemisphere_value = -1
     latitude_txt_split[1] = latitude_txt_split[1][:-1]
+    latitude_hemisphere_value = 1 if latitude_hemisphere == 'N' else -1
     latitude_value = latitude_hemisphere_value * (float(latitude_txt_split[0]) + float(latitude_txt_split[1])/60)
     longitude_txt_split = xmp_snapshot.iloc[0]['exif GPSLongitude'].split(',')
     longitude_hemisphere = longitude_txt_split[1][-1]
-    if longitude_hemisphere == 'E':
-        longitude_hemisphere_value = 1
-    elif longitude_hemisphere == 'W':
-        longitude_hemisphere_value = -1
     longitude_txt_split[1] = longitude_txt_split[1][:-1]
-    longitude_value =  longitude_hemisphere_value * (float(longitude_txt_split[0]) + float(longitude_txt_split[1])/60)
+    longitude_hemisphere_value = 1 if longitude_hemisphere == 'N' else -1
+    longitude_value = longitude_hemisphere_value * (float(longitude_txt_split[0]) + float(longitude_txt_split[1])/60)
 
     latlng = [latitude_value, longitude_value]
     
     return xmp_snapshot, latlng
+
+
