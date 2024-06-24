@@ -1,6 +1,7 @@
 import os, shutil, string
 import re
 import pandas as pd
+import formatters
 # import numpy as np
 # import time
 # import warnings
@@ -51,12 +52,13 @@ def readXMPfiles(XMPdirectory):
                     tags = re.findall(search_re, tags_fulltext.group())
                     if tags:
                         single_value = ','.join(tags)
-                    else: single_value = 'NoTags'
+                    else: single_value = 'Placeholder'
                 else:
-                    single_value = 'NoTags'
+                    single_value = 'Placeholder'
 
             xmp_snapshot.loc[key,column] = single_value
 
+    xmp_snapshot['exif DateTimeOriginal'] = formatters.format_datetimes(xmp_snapshot['exif DateTimeOriginal'], 'ISO 8601 string tz to Zulu')
     xmp_snapshot = xmp_snapshot.sort_values('exif DateTimeOriginal')
     xmp_snapshot.insert(0, 'awim FrameNumber', range(1, 1 + len(xmp_snapshot)))
 
@@ -76,3 +78,23 @@ def readXMPfiles(XMPdirectory):
     return xmp_snapshot, latlng
 
 
+def addTags(df_before, df_new, xmp_directory):
+    for row, value in df_new.iterrows():
+        xmpfullpath = os.path.join(xmp_directory, row) + '.xmp'
+        with open(xmpfullpath, 'r') as f:
+            xmptext = f.read()
+        if value[['awim CommaSeparatedTags']].values[0] == df_before.loc[row][['awim CommaSeparatedTags']].values[0]:
+            print('No new tags.')
+        elif 'Placeholder' in df_before.loc[row][['awim CommaSeparatedTags']].values[0]:
+            tags = value[['awim CommaSeparatedTags']].values[0]
+            tags = tags.split(',')
+            addition = '\n   <dc:subject>\n    <rdf:Bag>\n     <rdf:li>'
+            for tag in tags:
+                if tag != 'Placeholder':
+                    addition += tag + '</rdf:li>'
+            addition += '\n    </rdf:Bag>\n   </dc:subject>'
+            xmp_new = re.sub(r'(</xmpMM:History>)', rf'\1{addition}', xmptext)
+            with open (xmpfullpath, 'w') as f:
+                f.write(xmp_new)
+        else:
+            pass # TODO this is the case where there was already a tag so no placeholder and no dc:subject required.

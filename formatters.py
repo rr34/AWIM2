@@ -41,6 +41,9 @@ def format_datetimes(input_datetime, direction):
     elif direction == 'from list of ISO 8601 strings':
         output = [np.datetime64(t) for t in input_datetime]
 
+    elif direction == 'ISO 8601 string tz to Zulu':
+        output = [str(np.datetime64(ts))+'Z' for ts in input_datetime]
+
     return output
 
 
