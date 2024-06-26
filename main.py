@@ -81,11 +81,16 @@ class XMPdisplay(Frame):
         moments_list = formatters.format_datetimes(input_datetime=moments_list, direction='from list of ISO 8601 strings')
         print(self.controller.lapse_latlng)
         sun_az_list, sun_art_list = astropytools.get_AzArts(earth_latlng=self.controller.lapse_latlng, moments=moments_list, celestial_object='sun')
-        day_night_twilight_list = astropytools.day_night_twilight(sun_art_list)
+        moon_az_list, moon_art_list = astropytools.get_AzArts(earth_latlng=self.controller.lapse_latlng, moments=moments_list, celestial_object='moon')
+        day_night_twilight_list = astropytools.day_night_twilight(sun_art_list, moon_art_list)
         sun_az_list = formatters.round_to_string(sun_az_list, 'azimuth')
         sun_art_list = formatters.round_to_string(sun_art_list, 'artifae')
+        moon_az_list = formatters.round_to_string(moon_az_list, 'azimuth')
+        moon_art_list = formatters.round_to_string(moon_art_list, 'artifae')
         self.controller.XMP2['awim SunAz'] = sun_az_list
         self.controller.XMP2['awim SunArt'] = sun_art_list
+        self.controller.XMP2['awim MoonAz'] = moon_az_list
+        self.controller.XMP2['awim MoonArt'] = moon_art_list
         self.controller.XMP2['awim DayNightTwilight'] = day_night_twilight_list
         self.controller.XMP2['awim CommaSeparatedTags'] = self.controller.XMP2.apply(lambda x:'%s,%s' % (x['awim CommaSeparatedTags'], x['awim DayNightTwilight']), axis=1)
 

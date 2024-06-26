@@ -79,22 +79,23 @@ def readXMPfiles(XMPdirectory):
 
 
 def addTags(df_before, df_new, xmp_directory):
-    for row, value in df_new.iterrows():
+    for row, value in df_new.iterrows(): # 
+        tags_before = df_before.loc[row][['awim CommaSeparatedTags']].values[0].split(',')
+        tags_new = value[['awim CommaSeparatedTags']].values[0].split(',')
+        tags_all = list(set(tags_before + tags_new))
+
         xmpfullpath = os.path.join(xmp_directory, row) + '.xmp'
         with open(xmpfullpath, 'r') as f:
             xmptext = f.read()
-        if value[['awim CommaSeparatedTags']].values[0] == df_before.loc[row][['awim CommaSeparatedTags']].values[0]:
-            print('No new tags.')
-        elif 'Placeholder' in df_before.loc[row][['awim CommaSeparatedTags']].values[0]:
-            tags = value[['awim CommaSeparatedTags']].values[0]
-            tags = tags.split(',')
-            addition = '\n   <dc:subject>\n    <rdf:Bag>\n     <rdf:li>'
-            for tag in tags:
-                if tag != 'Placeholder':
-                    addition += tag + '</rdf:li>'
-            addition += '\n    </rdf:Bag>\n   </dc:subject>'
-            xmp_new = re.sub(r'(</xmpMM:History>)', rf'\1{addition}', xmptext)
-            with open (xmpfullpath, 'w') as f:
-                f.write(xmp_new)
-        else:
-            pass # TODO this is the case where there was already a tag so no placeholder and no dc:subject required.
+        if '<dc:subject>' in xmptext:
+            xmptext = re.sub(r'\n<dc:subject>.*</dc:subject>', '', xmptext, flags=re.DOTALL)
+        
+        addition = '\n   <dc:subject>\n    <rdf:Bag>'
+        for tag in tags_all:
+            if tag != 'Placeholder':
+                addition += '\n     <rdf:li>' + tag + '</rdf:li>'
+        addition += '\n    </rdf:Bag>\n   </dc:subject>'
+
+        xmptext = re.sub(r'(</xmpMM:History>)', rf'\1{addition}', xmptext)
+        with open (xmpfullpath, 'w') as f:
+            f.write(xmptext)
