@@ -96,7 +96,7 @@ def day_night_twilight(sun_arts, moon_arts):
         elif sun_movement < 0 and -6 > sun_arts[i] >= -12:
             if 'ENT' not in light:
                 ENT_count +=1
-            light = 'ENT' + ENT_count
+            light = 'ENT' + str(ENT_count)
         elif sun_movement < 0 and -12 > sun_arts[i] >= -18:
             if 'EAT' not in light:
                 EAT_count +=1

@@ -103,9 +103,10 @@ class XMPdisplay(Frame):
         filename = f'XMP_step1 {time_string}.csv'
         filepath = os.path.join(self.controller.XMPdirectory, filename)
         self.controller.XMP2.to_csv(filepath)
-        self.display_dataframe() # unnecessary, but wanted to see what it looks like
+        # self.display_dataframe() # unnecessary, but wanted to see what it looks like
         # write the comma-separated tags to the XMP files
         XMPtext.addTags(self.controller.XMP_snapshot, self.controller.XMP2, self.controller.XMPdirectory)
+        print('Completed step 1 labelling XMP files with cellestial events.')
 
 
     def display_dataframe(self):
@@ -125,9 +126,11 @@ class XMPdisplay(Frame):
         filename = f'XMP_step2 {time_string}.csv'
         filepath = os.path.join(self.controller.XMPdirectory, filename)
         self.controller.XMP2.to_csv(filepath)
-        self.display_dataframe() # unnecessary, but wanted to see what it looks like
+        # self.display_dataframe() # unnecessary, but wanted to see what it looks like
         # write the new values to the XMP files
         XMPtext.write_values(self.controller.XMP2, self.controller.columns_to_interpolate, self.controller.XMPdirectory)
+        print('Completed step 2 interpolating between the keyframes.')
+
 
 class lensVisualization(Frame):
     def __init__(self, parent, controller):
