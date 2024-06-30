@@ -1,5 +1,6 @@
 import os, shutil, string
 import re
+import numpy as np
 import pandas as pd
 import formatters
 # import numpy as np
@@ -60,7 +61,7 @@ def readXMPfiles(XMPdirectory):
 
     xmp_snapshot['exif DateTimeOriginal'] = formatters.format_datetimes(xmp_snapshot['exif DateTimeOriginal'], 'ISO 8601 string tz to Zulu')
     xmp_snapshot = xmp_snapshot.sort_values('exif DateTimeOriginal')
-    xmp_snapshot.insert(0, 'awim FrameNumber', range(1, 1 + len(xmp_snapshot)))
+    xmp_snapshot.insert(0, 'awim FrameNumber', range(0, len(xmp_snapshot)))
 
     latitude_txt_split = xmp_snapshot.iloc[0]['exif GPSLatitude'].split(',')
     latitude_hemisphere = latitude_txt_split[1][-1]
@@ -97,5 +98,33 @@ def addTags(df_before, df_new, xmp_directory):
         addition += '\n    </rdf:Bag>\n   </dc:subject>'
 
         xmptext = re.sub(r'(</xmpMM:History>)', rf'\1{addition}', xmptext)
+        with open (xmpfullpath, 'w') as f:
+            f.write(xmptext)
+
+
+def interpolate(df_xmp, columns):
+    # set all the non-keyframe values equal to np.nan
+    df_xmp.loc[~df_xmp['awim CommaSeparatedTags'].str.contains('keyframe', case=False), columns] = np.nan
+    # interpolate all the np.nan in between the keyframes, and extend the keyframe values backward to beginning and forward to the end
+    df_xmp[columns] = df_xmp[columns].astype(float).interpolate().bfill().ffill().astype(str)
+
+    return df_xmp
+
+
+def write_values(df_towrite, columns, xmp_directory):
+    # row-by-row in the df is the same as xmpfile-by-xmpfile
+    for row, value in df_towrite.iterrows():
+        print('Writing ' + row)
+        xmpfullpath = os.path.join(xmp_directory, row) + '.xmp'
+        with open(xmpfullpath, 'r') as f:
+            xmptext = f.read()
+
+        for column in columns:
+            value_to_write = value[column]
+            column_list = column.split(' ')
+            xmp_text_search = rf'{column_list[0]}:{column_list[1]}="[\d+-.]*"'
+            xmp_text_sub = rf'{column_list[0]}:{column_list[1]}="{value_to_write}"'
+            xmptext = re.sub(xmp_text_search, xmp_text_sub, xmptext)
+            
         with open (xmpfullpath, 'w') as f:
             f.write(xmptext)

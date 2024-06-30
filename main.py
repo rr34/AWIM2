@@ -60,9 +60,9 @@ class XMPdisplay(Frame):
         Frame.__init__(self, parent)
         self.controller = controller
 
-        self.bind('<Control-Key-f>', self.select_XMPdirectory)
-        self.bind('<Control-Key-r>', self.readXMPfiles)
-        self.bind('<Control-Key-w>', self.writeXMPfiles)
+        self.bind('<Control-Key-d>', self.select_XMPdirectory)
+        self.bind('<Control-Key-1>', self.step1_initial_label_XMPs)
+        self.bind('<Control-Key-2>', self.step2_interpolate)
 
         self.first_row = 0
         self.columns_to_display = ['exif DateTimeOriginal', 'crs Temperature', 'crs Tint', 'crs Exposure2012', 'exif FNumber', 'awim CommaSeparatedTags'] # need to add comma-separated tags
@@ -70,18 +70,21 @@ class XMPdisplay(Frame):
     def select_XMPdirectory(self, event):
         self.controller.XMPdirectory = filedialog.askdirectory(title='Select XMP directory.')
 
-    def readXMPfiles(self, event):
+    def read_XMPs(self):
         self.controller.XMP_snapshot, self.controller.lapse_latlng = XMPtext.readXMPfiles(self.controller.XMPdirectory)
         self.controller.XMP2 = self.controller.XMP_snapshot.copy()
-        self.process_XMP_data()
-        self.writeXMPfiles()
-    
-    def process_XMP_data(self):
+
+    def step1_initial_label_XMPs(self, event):
+        # read XMP files
+        self.read_XMPs()
+        # set variables for sun and moon calculations
         moments_list = self.controller.XMP2['exif DateTimeOriginal'].values
         moments_list = formatters.format_datetimes(input_datetime=moments_list, direction='from list of ISO 8601 strings')
         print(self.controller.lapse_latlng)
+        # calculate sun and moon values
         sun_az_list, sun_art_list = astropytools.get_AzArts(earth_latlng=self.controller.lapse_latlng, moments=moments_list, celestial_object='sun')
         moon_az_list, moon_art_list = astropytools.get_AzArts(earth_latlng=self.controller.lapse_latlng, moments=moments_list, celestial_object='moon')
+        # convert sun and moon values to day, night, twilight labels, format numbers, add to dataframe
         day_night_twilight_list = astropytools.day_night_twilight(sun_art_list, moon_art_list)
         sun_az_list = formatters.round_to_string(sun_az_list, 'azimuth')
         sun_art_list = formatters.round_to_string(sun_art_list, 'artifae')
@@ -92,26 +95,39 @@ class XMPdisplay(Frame):
         self.controller.XMP2['awim MoonAz'] = moon_az_list
         self.controller.XMP2['awim MoonArt'] = moon_art_list
         self.controller.XMP2['awim DayNightTwilight'] = day_night_twilight_list
+        # concatenate new tags together with the old tags, comma-separated
         self.controller.XMP2['awim CommaSeparatedTags'] = self.controller.XMP2.apply(lambda x:'%s,%s' % (x['awim CommaSeparatedTags'], x['awim DayNightTwilight']), axis=1)
-
+        # save dataframe to CSV file
         timenow = datetime.datetime.now()
         time_string = formatters.format_datetimes(timenow, 'to string for filename')
-        filename = 'XMP2 %s.csv' % (time_string)
+        filename = f'XMP_step1 {time_string}.csv'
         filepath = os.path.join(self.controller.XMPdirectory, filename)
         self.controller.XMP2.to_csv(filepath)
-        
-        self.display_dataframe()
-
-    def writeXMPfiles(self):
+        self.display_dataframe() # unnecessary, but wanted to see what it looks like
+        # write the comma-separated tags to the XMP files
         XMPtext.addTags(self.controller.XMP_snapshot, self.controller.XMP2, self.controller.XMPdirectory)
+
 
     def display_dataframe(self):
         self.display_dataframe = self.controller.XMP2[self.columns_to_display]
         self.table = pt = pandastable.Table(self, dataframe=self.display_dataframe, showtoolbar=True, showstatusbar=True)
 
         pt.show()
-
         # this frame will display the selected fields from XMP files and allow to modify by defining keyframes etc
+
+    def step2_interpolate(self, event):
+        self.read_XMPs()
+        self.controller.columns_to_interpolate = ['crs Temperature', 'crs Tint', 'crs Exposure2012', 'crs Contrast2012', 'crs Highlights2012', 'crs Shadows2012', 'crs Whites2012', 'crs Blacks2012', 'crs Texture', 'crs Clarity2012', 'crs Dehaze', 'crs Vibrance', 'crs Saturation']
+        self.controller.XMP2 = XMPtext.interpolate(self.controller.XMP_snapshot, self.controller.columns_to_interpolate)
+        # save dataframe to CSV file
+        timenow = datetime.datetime.now()
+        time_string = formatters.format_datetimes(timenow, 'to string for filename')
+        filename = f'XMP_step2 {time_string}.csv'
+        filepath = os.path.join(self.controller.XMPdirectory, filename)
+        self.controller.XMP2.to_csv(filepath)
+        self.display_dataframe() # unnecessary, but wanted to see what it looks like
+        # write the new values to the XMP files
+        XMPtext.write_values(self.controller.XMP2, self.controller.columns_to_interpolate, self.controller.XMPdirectory)
 
 class lensVisualization(Frame):
     def __init__(self, parent, controller):
