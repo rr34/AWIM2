@@ -124,7 +124,14 @@ def write_values(df_towrite, columns, xmp_directory):
             column_list = column.split(' ')
             xmp_text_search = rf'{column_list[0]}:{column_list[1]}="[\d+-.]*"'
             xmp_text_sub = rf'{column_list[0]}:{column_list[1]}="{value_to_write}"'
-            xmptext = re.sub(xmp_text_search, xmp_text_sub, xmptext)
+            if re.search(xmp_text_search, xmptext):
+                xmptext = re.sub(xmp_text_search, xmp_text_sub, xmptext)
+            else:
+                xmp_text_addition = '   \n' + xmp_text_sub
+                find_rdf = r'<rdf:Description.*?crs:'
+                found_rdf = re.search(find_rdf, xmptext, re.DOTALL)
+                add_pos = found_rdf.regs[0][1] - 7
+                xmptext = xmptext[:add_pos] + xmp_text_addition + xmptext[add_pos:]
             
         with open (xmpfullpath, 'w') as f:
             f.write(xmptext)

@@ -129,7 +129,7 @@ class XMPdisplay(Frame):
         # self.display_dataframe() # unnecessary, but wanted to see what it looks like
         # write the new values to the XMP files
         XMPtext.write_values(self.controller.XMP2, self.controller.columns_to_interpolate, self.controller.XMPdirectory)
-        print('Completed step 2 interpolating between the keyframes.')
+        print('Completed step 2 interpolating between the keyframes and writing to XMP files.')
 
 
 class lensVisualization(Frame):
